@@ -83,49 +83,33 @@ function appendComments(parsedComments) {
     let ul = document.querySelector('.comments__list')
 
     for(let item of parsedComments) {
+        
         let li = document.createElement('li')
+        addElementToPage(li, 'list__item')(ul, li)
+
 
         let name = document.createElement('div')
+        addElementToPage(name, 'item__name', item.name)(li, name)
+
         let text = document.createElement('div')
+        addElementToPage(text, 'item__text', item.text)(li, text)
+
         let info = document.createElement('div')
+        addElementToPage(info, 'item__info')(li, info)
+
 
         let infoDate = document.createElement('div')
+        addElementToPage(infoDate, 'info__date', `${item.date}, ${item.time}`)(info, infoDate)
+
         let infoButtons = document.createElement('div')
+        addElementToPage(infoButtons, 'info__buttons')(info, infoButtons)
+
 
         let buttonLike = document.createElement('button')
-        let buttonDelete = document.createElement('button')
-
-        li.classList.add('list__item')
-
-        name.classList.add('item__name')
-        text.classList.add('item__text')
-        info.classList.add('item__info')
-
-        infoDate.classList.add('info__date')
-        infoButtons.classList.add('info__buttons')
-
-        buttonLike.classList.add('buttons__like')
-        buttonDelete.classList.add('buttons__delete')
-
-        name.textContent = item.name
-        text.textContent = item.text
-
-        infoDate.textContent = item.date + ', ' + item.time
-
-        buttonLike.textContent = 'Лайкнуть'
-        buttonDelete.textContent = 'Удалить'
+        addElementToPage(buttonLike, 'buttons__like', 'Лайкнуть')(infoButtons, buttonLike)
         
-        li.append(name)
-        li.append(text)
-        li.append(info)
-
-        info.append(infoDate)
-        info.append(infoButtons)
-
-        infoButtons.append(buttonLike)
-        infoButtons.append(buttonDelete)
-
-        ul.append(li)
+        let buttonDelete = document.createElement('button')
+        addElementToPage(buttonDelete, 'buttons__delete', 'Удалить')(infoButtons, buttonDelete)
     }
 }
 
@@ -166,3 +150,12 @@ showLoadingMessage()
  * 3. Сделать отображение лайков и лайк/дизлайк
  * 4. Сделать таймстамп и вчера/сегодня
  */
+
+function addElementToPage(tagVariable, className, textContent = '') {
+    tagVariable.classList.add(className)
+    tagVariable.textContent = textContent
+
+    return function appendElement(parentNode, childNode) {
+        parentNode.append(childNode)
+    }
+}
