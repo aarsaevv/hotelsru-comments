@@ -14,33 +14,40 @@ let commentsArray = [
         id: 0,
         name: 'cветлана',
         text: 'Я, конечно, понимаю, что вам надо деньги зарабатывать, но нельзя же писать про шампуни!',
-        stamp: '',
-        likesCount: 2,
+        stamp: 1678183657000,
+        likedBy: ['Skyler White', 'Saul Goodman', 'Jessie'],
     },
     {
         id: 1,
         name: 'Игорь',
         text: 'А что такого? Нормальный шампунь. Моя собака не жаловалась.',
-        stamp: '',
-        likesCount: 14,
+        stamp: 1678270057000,
+        likedBy: ['Mike Ermantraut', 'Heisenberg', 'Tuco', 'Gus Fring'],
     },
     {
         id: 2,
         name: 'cветлана',
         text: 'Не знаю, юмор это или нет, мне всё равно! Так впаривать эту дрянь - возмутительно!',
-        stamp: '',
-        likesCount: 10,
+        stamp: 1678288057000,
+        likedBy: ['Skyler White', 'Hector'],
     },
     {
         id: 3,
         name: 'raygan228',
         text: 'Кто-то тратит деньги на рекламу, а кого-то клиенты находят сами.',
-        stamp: '',
-        likesCount: 5,
+        stamp: 1678356589000,
+        likedBy: ['Hank Schrader'],
     },
 ]
 
 // commentsArray = null
+
+/** Меняем массив через LS. */
+if(localStorage.getItem('comments')) {
+    let parsedComments = JSON.parse(localStorage.getItem('comments'))
+    commentsArray = parsedComments
+    console.log(parsedComments, commentsArray)
+} else commentsArray = []
 
 /** Добавляем комментарии */
 function setCommentsToLocalStorage(commentsArray) {
@@ -95,7 +102,7 @@ function appendComments(parsedComments) {
 
 
         let infoDate = document.createElement('div')
-        addElementToPage(infoDate, 'info__date', `${item.date}, ${item.time}`)(info, infoDate)
+        addElementToPage(infoDate, 'info__date', `${getTime(item.stamp)}`)(info, infoDate)
 
         let infoButtons = document.createElement('div')
         addElementToPage(infoButtons, 'info__buttons')(info, infoButtons)
@@ -105,9 +112,10 @@ function appendComments(parsedComments) {
         addElementToPage(buttonLike, 'buttons__like')(infoButtons, buttonLike)
 
         let likesCount = document.createElement('span')
-        addElementToPage(likesCount, 'info__likes', item.likesCount)(infoButtons, likesCount)
+        addElementToPage(likesCount, 'info__likes', item.likedBy.length)(infoButtons, likesCount)
         
         let buttonDelete = document.createElement('button')
+        buttonDelete.commentId = item.id
         addElementToPage(buttonDelete, 'buttons__delete')(infoButtons, buttonDelete)
     }
 }
@@ -116,9 +124,7 @@ function appendComments(parsedComments) {
 function showNoCommentsMessage() {
     let ul = document.querySelector('.comments__list')
     let errorMessage = document.createElement('h1')
-    errorMessage.classList.add('comments__error')
-    errorMessage.textContent = 'Нет комментариев. Будьте первым, кто оставит комментарий.'
-    ul.append(errorMessage)
+    addElementToPage(errorMessage, 'comments__error', 'Нет комментариев. Будьте первым, кто оставит комментарий.')(ul, errorMessage)
 }
 
 /** Заглушка загрузки */
@@ -135,13 +141,6 @@ function hideLoadingMessage() {
     let loadingMessage = document.querySelector('.comments__loading')
     loadingMessage.remove()
 }
-
-/** Небольшая задержка для реалистичности */
-setTimeout(() => setCommentsToLocalStorage(commentsArray), 100)
-setTimeout(() => getCommentsFromLocalStorage(), 800)
-
-/** И заглушка */
-showLoadingMessage()
 
 /** Функция-хэлпер для унифицированного добавления элементов в DOM-дерево.
  * Настраивает свойства элемента, затем добавляет его в выбранную ноду.
@@ -162,24 +161,90 @@ function addElementToPage(tagVariable, className, textContent = '') {
     }
 }
 
-// function getTime(stamp) {
-// }
+/** Функция проверки и отображения таймстампа в человеческом формате. Если пост написан сегодня или вчера, отображает это и время.
+ * Если пост написан давно, отображает дату и время.
+ */
+function getTime(stamp) {
+    let date = new Date(stamp)
+    let singleDay = 86400000
+    let twoDays = 172800000
+
+    return ((Date.now() - stamp) < singleDay)
+        ? 'Сегодня, ' + date.toLocaleTimeString(['ru-RU'], {hour: '2-digit', minute: '2-digit'})
+        : (((Date.now() - stamp) > singleDay) && ((Date.now() - stamp) < twoDays))
+        ? 'Вчера, ' + date.toLocaleTimeString(['ru-RU'], {hour: '2-digit', minute: '2-digit'})
+        : [date.toLocaleTimeString(['ru-RU'], {day: 'numeric', month: 'numeric', year: 'numeric', hour: '2-digit', minute:'2-digit'})]
+}
 
 // function toggleLike() {
-// }
-
-// function deleteComment(commentsArray) {
 // }
 
 // function submitComment() {
 // }
 
-// function likeObserver() {
-// }
+/** Небольшая задержка для реалистичности */
+setTimeout(() => setCommentsToLocalStorage(commentsArray), 300)
+setTimeout(() => {
+
+    getCommentsFromLocalStorage()
+    handleRemovingComment()
+    handleSubmitComment()
+    console.log(commentsArray)    
+
+}, 600)
+
+/** И заглушка */
+showLoadingMessage()
 
 /** Заметки на полях:
  * 1. Написать хэлпер для создания форм -- готово
  * 2. Сделать отправку и удаление
  * 3. Сделать отображение лайков и лайк/дизлайк
- * 4. Сделать таймстамп и вчера/сегодня - возвращает строку
+ * 4. Сделать таймстамп и вчера/сегодня - возвращает строку -- готово
  */
+function handleRemovingComment() {
+    let deleteButton = document.querySelectorAll('.buttons__delete')
+    deleteButton.forEach(deleteButton => {
+        deleteButton.addEventListener('click', () => removeComment(deleteButton.commentId))
+    })
+}
+
+function removeComment(id) {
+    let parsedComments = JSON.parse(localStorage.getItem('comments'))
+    parsedComments = parsedComments.filter(el => el.id !== id)
+    localStorage.setItem('comments', JSON.stringify(parsedComments))
+    window.location.reload()
+}
+
+function handleSubmitComment() {
+    let submitButton = document.querySelector('.form__submit')
+    submitButton.addEventListener('click', () => submitComment(commentsArray))
+}
+
+function submitComment() {
+    if(localStorage.getItem('comments')) {
+        let parsedComments = JSON.parse(localStorage.getItem('comments'))
+        parsedComments.push({
+            id: commentsArray.length + 1,
+            name: 'Евгений',
+            text: 'Работает!',
+            stamp: Date.now(),
+            likedBy: ['Skyler White', 'Saul Goodman', 'Jessie'],
+        })
+        localStorage.setItem('comments', JSON.stringify(parsedComments))
+        window.location.reload()
+    } else {
+        localStorage.setItem('comments', `[]`)
+        let parsedComments = JSON.parse(localStorage.getItem('comments'))
+        console.log(parsedComments)
+        parsedComments.push({
+            id: commentsArray.length + 1,
+            name: 'Евгений',
+            text: 'Работает!',
+            stamp: Date.now(),
+            likedBy: ['Skyler White', 'Saul Goodman', 'Jessie'],
+        })
+        localStorage.setItem('comments', JSON.stringify(parsedComments))
+        window.location.reload()
+    }   
+}
