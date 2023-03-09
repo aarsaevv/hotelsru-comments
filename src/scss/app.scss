@@ -59,6 +59,43 @@ body {
     }
 }
 
+.info {
+    &__buttons {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 120px;
+    }
+
+    &__likes {
+        position: relative;
+        right: 24px;
+    }
+}
+
+.buttons {
+
+    &__like,
+    &__delete {
+        width: 24px;
+        height: 24px;
+        background: transparent;
+        background-repeat: no-repeat;
+        border: none;
+        cursor: pointer;
+    }
+
+    &__like {
+        background-image: url(../assets/heart.svg);
+        background-size: 24px 24px;
+    }
+
+    &__delete {
+        background-image: url(../assets/bin.svg);
+        background-size: 24px 21px;
+    }
+}
+
 .form {
     margin: 24px 0 0 0;
     width: 80%;

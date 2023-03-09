@@ -7,40 +7,36 @@ import './scss/app.scss'
  */
 
 /** Вот и псевдо-данные из БД.
- * Если массив будет пустым или null, будет 0 сообщений
+ * Если массив будет пустым или null, будет 0 сообщений.
 */
 let commentsArray = [
     {
         id: 0,
         name: 'cветлана',
         text: 'Я, конечно, понимаю, что вам надо деньги зарабатывать, но нельзя же писать про шампуни!',
-        date: '07-03-2023',
-        time: '23:48',
-        likes: 14,
+        stamp: '',
+        likesCount: 2,
     },
     {
         id: 1,
         name: 'Игорь',
         text: 'А что такого? Нормальный шампунь. Моя собака не жаловалась.',
-        date: '07-03-2023',
-        time: '23:59',
-        likes: 14,
+        stamp: '',
+        likesCount: 14,
     },
     {
         id: 2,
         name: 'cветлана',
         text: 'Не знаю, юмор это или нет, мне всё равно! Так впаривать эту дрянь - возмутительно!',
-        date: '08-03-2023',
-        time: '00:18',
-        likes: 14,
+        stamp: '',
+        likesCount: 10,
     },
     {
         id: 3,
         name: 'raygan228',
         text: 'Кто-то тратит деньги на рекламу, а кого-то клиенты находят сами.',
-        date: '07-03-2023',
-        time: '09:35',
-        likes: 14,
+        stamp: '',
+        likesCount: 5,
     },
 ]
 
@@ -83,7 +79,7 @@ function appendComments(parsedComments) {
     let ul = document.querySelector('.comments__list')
 
     for(let item of parsedComments) {
-        
+
         let li = document.createElement('li')
         addElementToPage(li, 'list__item')(ul, li)
 
@@ -106,10 +102,13 @@ function appendComments(parsedComments) {
 
 
         let buttonLike = document.createElement('button')
-        addElementToPage(buttonLike, 'buttons__like', 'Лайкнуть')(infoButtons, buttonLike)
+        addElementToPage(buttonLike, 'buttons__like')(infoButtons, buttonLike)
+
+        let likesCount = document.createElement('span')
+        addElementToPage(likesCount, 'info__likes', item.likesCount)(infoButtons, likesCount)
         
         let buttonDelete = document.createElement('button')
-        addElementToPage(buttonDelete, 'buttons__delete', 'Удалить')(infoButtons, buttonDelete)
+        addElementToPage(buttonDelete, 'buttons__delete')(infoButtons, buttonDelete)
     }
 }
 
@@ -131,7 +130,7 @@ function showLoadingMessage() {
     ul.append(loadingMessage)
 }
 
-/** Её скрытие */
+/** Скрытие заглушки загрузки */
 function hideLoadingMessage() {
     let loadingMessage = document.querySelector('.comments__loading')
     loadingMessage.remove()
@@ -144,13 +143,16 @@ setTimeout(() => getCommentsFromLocalStorage(), 800)
 /** И заглушка */
 showLoadingMessage()
 
-/** Заметки на полях:
- * 1. Написать хэлпер для создания форм
- * 2. Сделать отправку и удаление
- * 3. Сделать отображение лайков и лайк/дизлайк
- * 4. Сделать таймстамп и вчера/сегодня
+/** Функция-хэлпер для унифицированного добавления элементов в DOM-дерево.
+ * Настраивает свойства элемента, затем добавляет его в выбранную ноду.
+ * 
+ * Параметры элемента:
+ * 1. Имя созданного элемента
+ * 2. Название класса: String
+ * 3. Текстовый контент: String
+ * 4. Родительская нода
+ * 5. Дочерняя нода
  */
-
 function addElementToPage(tagVariable, className, textContent = '') {
     tagVariable.classList.add(className)
     tagVariable.textContent = textContent
@@ -159,3 +161,25 @@ function addElementToPage(tagVariable, className, textContent = '') {
         parentNode.append(childNode)
     }
 }
+
+// function getTime(stamp) {
+// }
+
+// function toggleLike() {
+// }
+
+// function deleteComment(commentsArray) {
+// }
+
+// function submitComment() {
+// }
+
+// function likeObserver() {
+// }
+
+/** Заметки на полях:
+ * 1. Написать хэлпер для создания форм -- готово
+ * 2. Сделать отправку и удаление
+ * 3. Сделать отображение лайков и лайк/дизлайк
+ * 4. Сделать таймстамп и вчера/сегодня - возвращает строку
+ */
