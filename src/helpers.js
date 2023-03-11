@@ -59,3 +59,5 @@ export const customDateWithCurrentTime = (formDate) => {
 
     return choosedDateWithCurrentTime
 }
+
+export const removeFromHTML = (item) => item.remove()

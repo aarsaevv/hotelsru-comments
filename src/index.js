@@ -1,5 +1,5 @@
 import './scss/app.scss'
-import { addElementToPage, getTime, customDateWithCurrentTime, serialize, deserialize } from './helpers'
+import { addElementToPage, getTime, customDateWithCurrentTime, serialize, deserialize, removeFromHTML } from './helpers'
 
 
 // INTRO
@@ -8,6 +8,7 @@ import { addElementToPage, getTime, customDateWithCurrentTime, serialize, deseri
  * чтобы лишь кэшировать отправленные сообщения и сохранять их после обновления страницы, я эмулирую запрос к серверу
  * каждый раз при загрузке страницы, следовательно, при изменении входных данных изменяется и отображение. Соответственно,
  * при отправке комментария он сначала изменяет данные на псевдо-сервере, а затем отображение.
+ * Единственное послабление (пока что): лайки в LS не меняются ввиду того, что не придумал логику подсчета комментариев без авторизации.
  */
 
 
@@ -63,8 +64,6 @@ function setCommentsToLocalStorage(commentsArray) {
 /** Забираем комментарии */
 function getCommentsFromLocalStorage() {
 
-    hideLoadingMessage()
-
     /** Если получили, вызываем функции для добавления элементов на страницу */
     if(localStorage.getItem('comments')) {
 
@@ -86,15 +85,8 @@ function addCommentToLocalStorage(parsedComments, formName, formText, formDate) 
     })
 }
 
-// /** Функция "лайкания" элемента в LS */
-// function likeCommentToLocalStorage(id) {
-
-// }
-
-
 /** Функция удаления элемента списка из LS */
 function removeCommentFromLocalStorage(id) {
-
     let parsedComments = deserialize(localStorage.getItem('comments'))
 
     parsedComments = parsedComments.filter(el => el.id !== id)
@@ -103,92 +95,72 @@ function removeCommentFromLocalStorage(id) {
 
 
 // HANDLERS
-//*** ПЕРЕПИСАТЬ, ЧТОБЫ ВИСЕЛО НА ДОБАВЛЕННЫХ ЭЛЕМЕНТАХ
 
-/** Обработчик клика на корзину  */
-function handleRemovingComment() {
+function superHandler() {
 
-    let listItem = document.querySelectorAll('.list__item')
-    let deleteButtons = document.querySelectorAll('.buttons__delete')
+    let commentsList = document.querySelector('.comments__list')
 
-    deleteButtons.forEach(deleteButton => {
-        deleteButton.addEventListener('click', () => {
 
-            listItem.forEach(listItem => {
-                listItem.addEventListener('click', () => {
-                    /** Удаляем элемент списка из разметки. */
-                    listItem.remove()
-                })
-            })
-            /** Удаление элемента списка из LS */
-            removeCommentFromLocalStorage(deleteButton.commentId)
-        })
-    })
-}
+    let form = document.querySelector('.form')
 
-/** Обработчик добавления элемента через форму. */
-function handleSubmitComment() {
-
-    let submitButton = document.querySelector('.form__submit')
 
     let formName = document.querySelector('.form__name')
     let formText = document.querySelector('.form__text')
     let formDate = document.querySelector('.form__date')
 
-    /** Слушатели на поля имени, текстового контента и даты */
-    formName.addEventListener('keydown', (e) => {
 
-        if(e.key === 'Enter') {
+    let submitButton = document.querySelector('.form__submit')
 
-            e.preventDefault()
-            if(formName.value.length < 4) throw('Введите имя длиной не менее 4 символов.')
-            if(formText.value.length < 4) throw('Введите текст длиной не менее 4 символов.')
+    /** Слушатель на поля имени, текстового контента и даты */
+    form.addEventListener('keydown', (e) => {
 
-            submitComment(formName, formText, formDate)
+        if(e.target.classList.contains('form__name')
+        || e.target.classList.contains('form__text')
+        || e.target.classList.contains('form__date')) {
+
+            if(e.key === 'Enter') {
+
+                e.preventDefault()
+
+                submitComment(formName, formText, formDate)
+
+                formName.value = ''
+                formText.value = ''
+                formDate.value = ''
+            }
         }
     })
 
-    formText.addEventListener('keydown', (e) => {
-
-        if(e.key === 'Enter') {
-
-            e.preventDefault()
-            if(formName.value.length < 4) throw('Введите имя длиной не менее 4 символов.')
-            if(formText.value.length < 4) throw('Введите текст длиной не менее 4 символов.')
-        
-            submitComment(formName, formText, formDate)
-        }
-    })
-
-    formDate.addEventListener('keydown', (e) => {
-
-        if(e.key === 'Enter') {
-
-            if(!formName.value) throw('Нет имени')
-            if(!formText.value) throw('Нет текста')
-        
-            submitComment(formName, formText, formDate)
-        }
-    })
-
-    /** Слушатель на кнопку */
+    /** Слушатель на кнопку отправления */
     submitButton.addEventListener('click', () => {
-
-        if(!formName.value) throw('Нет имени')
-        if(!formText.value) throw('Нет текста')
         
         submitComment(formName, formText, formDate)
-    })   
+
+        formName.value = ''
+        formText.value = ''
+        formDate.value = ''
+    })
+
+    /** Слушатель на кнопку удаления */
+    commentsList.addEventListener('click', function(e) {
+
+        if(e.target.classList.contains('buttons__delete')) {
+            
+            let currentItem = e.target.closest('.list__item')
+            removeFromHTML(currentItem)
+            removeCommentFromLocalStorage(currentItem.commentId)
+        }
+    })
+
+    /** Слушатель на кнопку лайка */
+    commentsList.addEventListener('click', function(e) {
+
+        likeComment(e)
+    })
 }
-
-// /** Обработчик клика на сердечко */
-// function handleLike() {
-
-// }
 
 
 // APPENDERS TO HTML
-//*** СДЕЛАТЬ ЛАЙК
 
 /** Отрисовываем комментарии в списке */
 function appendCommentsFromLocalStorage(parsedComments) {
@@ -218,23 +190,37 @@ function appendCommentsFromLocalStorage(parsedComments) {
 
 
         let buttonLike = document.createElement('button')
-        buttonLike.commentId = item.stamp
         addElementToPage(buttonLike, 'buttons__like')(infoButtons, buttonLike)
 
         let likesCount = document.createElement('span')
         addElementToPage(likesCount, 'info__likes', item.likedBy.length)(infoButtons, likesCount)
         
         let buttonDelete = document.createElement('button')
-        buttonDelete.commentId = item.stamp
         addElementToPage(buttonDelete, 'buttons__delete')(infoButtons, buttonDelete)
     }
 }
 
 /** Функция добавления элемента в разметку. Вызывает функцию добавления элемента в LS. */
 function submitComment(formName, formText, formDate) {
+    
+    /** Помещает наш сабмит прямо в LS. Действует по-разному в зависимости от того, есть запись в LS на данный момент или нет. */
+    if(localStorage.getItem('comments')) {
 
+        let parsedComments = deserialize(localStorage.getItem('comments'))
+        addCommentToLocalStorage(parsedComments, formName, formText, formDate)
+        localStorage.setItem('comments', serialize(parsedComments))
+
+    } else {
+        localStorage.setItem('comments', `[]`)
+
+        let parsedComments = deserialize(localStorage.getItem('comments'))
+        addCommentToLocalStorage(parsedComments, formName, formText, formDate)
+        localStorage.setItem('comments', serialize(parsedComments))
+    }
 
     let li = document.createElement('li')
+    let parsedComments = deserialize(localStorage.getItem('comments'))
+    li.commentId = parsedComments[parsedComments.length - 1].id
     addElementToPage(li, 'list__item')(ul, li)
 
     
@@ -268,65 +254,28 @@ function submitComment(formName, formText, formDate) {
     
     let buttonDelete = document.createElement('button')
     addElementToPage(buttonDelete, 'buttons__delete')(infoButtons, buttonDelete)
-    
+}
 
-    /** Действия в зависимости от того, есть запись в LS на данный момент или нет. */
-    if(localStorage.getItem('comments')) {
-
-        let parsedComments = deserialize(localStorage.getItem('comments'))
-        addCommentToLocalStorage(parsedComments, formName, formText, formDate)
-        localStorage.setItem('comments', serialize(parsedComments))
-
-    } else {
-        localStorage.setItem('comments', `[]`)
-
-        let parsedComments = deserialize(localStorage.getItem('comments'))
-        addCommentToLocalStorage(parsedComments, formName, formText, formDate)
-        localStorage.setItem('comments', serialize(parsedComments))
+function likeComment(e) {
+    if(e.target.classList.contains('buttons__like')) {
+            
+        e.target.classList.toggle('like__active')
+        if(e.target.classList.contains('like__active')) {
+            e.target.nextSibling.textContent = Number(e.target.nextSibling.textContent) + 1
+        }
+        else {
+            e.target.nextSibling.textContent = Number(e.target.nextSibling.textContent) - 1
+        }
     }
 }
 
-// function likeComment(id) {
-// }
-
-
 // NOTIFICATIONS
 //*** СДЕЛАТЬ ВАЛИДАЦИЮ
-
-/** Заглушка загрузки */
-function showLoadingMessage() {
-
-    let loadingMessage = document.createElement('h1')
-    
-    addElementToPage(loadingMessage, 'comments__loading', 'Загрузка комментариев...')(ul, loadingMessage)
-}
-
-/** Скрытие заглушки загрузки */
-function hideLoadingMessage() {
-
-    let loadingMessage = document.querySelector('.comments__loading')
-    loadingMessage.remove()
-}
 
 
 // STARTUP
 
 let ul = document.querySelector('.comments__list')
-
-/** Вызов заглушки */
-showLoadingMessage()
-
-/** Небольшая задержка для реалистичности */
-setTimeout(() => {
-    setCommentsToLocalStorage(commentsArray)
-}, 300)
-
-setTimeout(() => {
-    getCommentsFromLocalStorage()
-    handleSubmitComment()
-    handleRemovingComment()
-    // handleLike()
-}, 600)
 
 /** Меняем массив через LS в целях реализации взаимодействия данных и LS */
 if(localStorage.getItem('comments')) {
@@ -337,3 +286,7 @@ if(localStorage.getItem('comments')) {
 else {
     commentsArray = []
 }
+
+superHandler()
+setCommentsToLocalStorage(commentsArray)
+getCommentsFromLocalStorage()

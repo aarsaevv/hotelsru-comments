@@ -2,8 +2,8 @@ $white: #f3f3f3;
 $black: #060607;
 $accent: #32926f;
 
-.active {
-    background-color: red;
+.like__active {
+    background-color: red !important;
 }
 
 body {
@@ -92,8 +92,10 @@ body {
     }
 
     &__like {
-        background: url(../assets/heart.svg);
+        background-color: black;
         background-size: 24px 24px;
+        background: gray;
+        clip-path: path("M12 4.248c-3.148-5.402-12-3.825-12 2.944 0 4.661 5.571 9.427 12 15.808 6.43-6.381 12-11.147 12-15.808 0-6.792-8.875-8.306-12-2.944z");
     }
 
     &__delete {
