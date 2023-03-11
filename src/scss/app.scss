@@ -1,9 +1,14 @@
 $white: #f3f3f3;
 $black: #060607;
 $accent: #32926f;
+$warning: #0e2a20;
 
 .like__active {
     background-color: red !important;
+}
+
+.validation-message {
+    color: $warning;
 }
 
 body {
@@ -62,6 +67,10 @@ body {
     &__info {
         display: flex;
         justify-content: space-between;
+    }
+
+    &__text {
+        word-wrap: break-word;
     }
 }
 
@@ -137,10 +146,4 @@ body {
         background-color: $accent;
         color: $white;
     }
-}
-
-.validation-message {
-    position: absolute;
-    top: 0px;
-    right: 0px;
 }

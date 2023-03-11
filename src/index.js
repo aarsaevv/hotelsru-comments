@@ -4,11 +4,11 @@ import { addElementToPage, getTime, customDateWithCurrentTime, serialize, deseri
 
 // INTRO
 
-/** Я решил использовать localStorage (далее LS) как псевдо-сервер. Вместо того,
+/** Я решил использовать localStorage как псевдо-сервер. Вместо того,
  * чтобы лишь кэшировать отправленные сообщения и сохранять их после обновления страницы, я эмулирую запрос к серверу
  * каждый раз при загрузке страницы, следовательно, при изменении входных данных изменяется и отображение. Соответственно,
  * при отправке комментария он сначала изменяет данные на псевдо-сервере, а затем отображение.
- * Единственное послабление (пока что): лайки в LS не меняются ввиду того, что не придумал логику подсчета комментариев без авторизации.
+ * Единственное послабление (пока что): лайки в localStorage не меняются ввиду того, что не придумал логику подсчета комментариев без авторизации.
  */
 
 
@@ -48,23 +48,24 @@ let commentsArray = [
     },
 ]
 
-/** Добавляем комментарии в LS из массива комментариев. */
+/** Добавляем комментарии в localStorage из массива комментариев. */
 function setCommentsToLocalStorage(commentsArray) {
 
-    /** Если с массивом все в порядке, добавляем в LS */
+    /** Если с массивом все в порядке, добавляем в localStorage */
     if(commentsArray && commentsArray.length) {
+
         let comments = serialize(commentsArray)
         localStorage.setItem('comments', comments)
     }
 
-    /** LS очищается для "похожести" на 404 */
+    /** localStorage очищается для "похожести" на 404 */
     else localStorage.clear()
 }
 
-/** Забираем комментарии */
+/** Забираем комментарии на страницу */
 function getCommentsFromLocalStorage() {
 
-    /** Если получили, вызываем функции для добавления элементов на страницу */
+    /** Если получили, вызываем функцию для добавления элементов на страницу */
     if(localStorage.getItem('comments')) {
 
         let parsedComments = deserialize(localStorage.getItem('comments'))
@@ -72,7 +73,7 @@ function getCommentsFromLocalStorage() {
     }
 }
 
-/** Функция добавления элемента в массив для дальнейшего помещения его в LS. */
+/** Функция добавления элемента в массив для дальнейшего помещения его в localStorage. */
 function addCommentToLocalStorage(parsedComments, formName, formText, formDate) {
     let choosedDateWithCurrentTime = customDateWithCurrentTime(formDate)
 
@@ -85,7 +86,7 @@ function addCommentToLocalStorage(parsedComments, formName, formText, formDate) 
     })
 }
 
-/** Функция удаления элемента списка из LS */
+/** Функция удаления элемента списка из localStorage */
 function removeCommentFromLocalStorage(id) {
     let parsedComments = deserialize(localStorage.getItem('comments'))
 
@@ -96,18 +97,16 @@ function removeCommentFromLocalStorage(id) {
 
 // HANDLERS
 
+/** Этот хенлдер используется сразу для всех интерактивных элементов. */
 function superHandler() {
 
     let commentsList = document.querySelector('.comments__list')
 
-
     let form = document.querySelector('.form')
-
 
     let formName = document.querySelector('.form__name')
     let formText = document.querySelector('.form__text')
     let formDate = document.querySelector('.form__date')
-
 
     let submitButton = document.querySelector('.form__submit')
 
@@ -118,27 +117,69 @@ function superHandler() {
         || e.target.classList.contains('form__text')
         || e.target.classList.contains('form__date')) {
 
+            form.addEventListener('change', (e) => hideValidationMessage())
+            form.addEventListener('input', (e) => hideValidationMessage())
+
             if(e.key === 'Enter') {
 
                 e.preventDefault()
-
-                submitComment(formName, formText, formDate)
-
-                formName.value = ''
-                formText.value = ''
-                formDate.value = ''
+                /** Проверка на правильность заполнения полей, запускающаяся по кнопке Enter. */
+                if(formName.value.length > 0 && formName.value.length < 3) {
+                    showValidationMessage('Имя должно содержать не менее 3 символов.', formName)
+                    return
+                }
+                else if(formText.value.length > 0 && formText.value.length < 10) {
+                    showValidationMessage('Комментарий должен содержать не менее 10 символов.', formText)
+                    return
+                }
+                else if(formName.value.length == 0) {
+                    showValidationMessage('Имя не может быть пустым.', formName)
+                    return
+                }
+                else if(formText.value.length == 0) {
+                    showValidationMessage('Комментарий не может быть пустым.', formText)
+                }
+                else {
+                    submitComment(formName, formText, formDate)
+                    /** Очистка полей после отправки */
+                    formName.value = ''
+                    formText.value = ''
+                    formDate.value = ''
+                }
             }
         }
     })
 
     /** Слушатель на кнопку отправления */
-    submitButton.addEventListener('click', () => {
-        
-        submitComment(formName, formText, formDate)
+    submitButton.addEventListener('click', (e) => {
 
-        formName.value = ''
-        formText.value = ''
-        formDate.value = ''
+        form.addEventListener('change', (e) => hideValidationMessage())
+        form.addEventListener('input', (e) => hideValidationMessage())
+        
+        e.preventDefault()
+        /** Проверка на правильность заполнения полей, запускающаяся по кнопке Отправить. */
+        if(formName.value.length > 0 && formName.value.length < 3) {
+                    showValidationMessage('Имя должно содержать не менее 3 символов.', formName)
+                    return
+                }
+                else if(formText.value.length > 0 && formText.value.length < 10) {
+                    showValidationMessage('Комментарий должен содержать не менее 10 символов.', formText)
+                    return
+                }
+                else if(formName.value.length == 0) {
+                    showValidationMessage('Имя не может быть пустым.', formName)
+                    return
+                }
+                else if(formText.value.length == 0) {
+                    showValidationMessage('Комментарий не может быть пустым.', formText)
+                }
+                else {
+                    submitComment(formName, formText, formDate)
+                    /** Очистка полей после клика */
+                    formName.value = ''
+                    formText.value = ''
+                    formDate.value = ''
+                }
     })
 
     /** Слушатель на кнопку удаления */
@@ -200,10 +241,10 @@ function appendCommentsFromLocalStorage(parsedComments) {
     }
 }
 
-/** Функция добавления элемента в разметку. Вызывает функцию добавления элемента в LS. */
+/** Функция добавления элемента в разметку. Вызывает функцию добавления элемента в localStorage. */
 function submitComment(formName, formText, formDate) {
     
-    /** Помещает наш сабмит прямо в LS. Действует по-разному в зависимости от того, есть запись в LS на данный момент или нет. */
+    /** Помещает наш сабмит прямо в localStorage. Действует по-разному в зависимости от того, есть запись в localStorage на данный момент или нет. */
     if(localStorage.getItem('comments')) {
 
         let parsedComments = deserialize(localStorage.getItem('comments'))
@@ -269,15 +310,40 @@ function likeComment(e) {
     }
 }
 
+
 // NOTIFICATIONS
-//*** СДЕЛАТЬ ВАЛИДАЦИЮ
+
+/** Сообщение о непрошедшей валидации */
+function showValidationMessage(str, form) {
+
+    /** Оригинальным способом получаем невалидированный инпут */
+    let unvalidatedForm = document.querySelector('.' + form.classList[0])
+    let validationMessage = document.createElement('div')
+
+    validationMessage.classList.add('validation-message')
+    validationMessage.textContent = str
+    /** Предотвращает появление более чем одного уведомления за раз */
+    if(document.querySelectorAll('.validation-message').length != 0) {
+        validationMessage.remove()
+    }
+    else {
+        /** Подобная конструкция используется, потому что аппенд на инпут "запирает" его внутри инпута */
+        unvalidatedForm.parentNode.insertBefore(validationMessage, unvalidatedForm.nextSibling)
+    }
+}
+
+/** Скрытие сообщения о непрошедшей валидации */
+function hideValidationMessage() {
+    let validationMessage = document.querySelector('.validation-message')
+    validationMessage.remove()
+}
 
 
 // STARTUP
 
 let ul = document.querySelector('.comments__list')
 
-/** Меняем массив через LS в целях реализации взаимодействия данных и LS */
+/** Меняем массив через localStorage в целях реализации взаимодействия данных и localStorage */
 if(localStorage.getItem('comments')) {
 
     let parsedComments = deserialize(localStorage.getItem('comments'))
