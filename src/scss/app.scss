@@ -2,6 +2,10 @@ $white: #f3f3f3;
 $black: #060607;
 $accent: #32926f;
 
+.active {
+    background-color: red;
+}
+
 body {
     font-family: Tahoma, sans-serif;
     background: $white;
@@ -88,7 +92,7 @@ body {
     }
 
     &__like {
-        background-image: url(../assets/heart.svg);
+        background: url(../assets/heart.svg);
         background-size: 24px 24px;
     }
 
@@ -131,4 +135,10 @@ body {
         background-color: $accent;
         color: $white;
     }
+}
+
+.validation-message {
+    position: absolute;
+    top: 0px;
+    right: 0px;
 }
