@@ -324,7 +324,7 @@ function showValidationMessage(str, form) {
     validationMessage.textContent = str
     /** Предотвращает появление более чем одного уведомления за раз */
     if(document.querySelectorAll('.validation-message').length != 0) {
-        validationMessage.remove()
+        document.querySelector('.validation-message').remove()
     }
     else {
         /** Подобная конструкция используется, потому что аппенд на инпут "запирает" его внутри инпута */
@@ -334,8 +334,9 @@ function showValidationMessage(str, form) {
 
 /** Скрытие сообщения о непрошедшей валидации */
 function hideValidationMessage() {
-    let validationMessage = document.querySelector('.validation-message')
-    validationMessage.remove()
+    if(document.querySelector('.validation-message')) {
+        document.querySelector('.validation-message').remove()
+    }
 }
 
 
@@ -343,15 +344,15 @@ function hideValidationMessage() {
 
 let ul = document.querySelector('.comments__list')
 
-/** Меняем массив через localStorage в целях реализации взаимодействия данных и localStorage */
-if(localStorage.getItem('comments')) {
+// /** Меняем массив через localStorage в целях реализации взаимодействия данных и localStorage */
+// if(localStorage.getItem('comments')) {
 
-    let parsedComments = deserialize(localStorage.getItem('comments'))
-    commentsArray = parsedComments
-}
-else {
-    commentsArray = []
-}
+//     let parsedComments = deserialize(localStorage.getItem('comments'))
+//     commentsArray = parsedComments
+// }
+// else {
+//     commentsArray = []
+// }
 
 superHandler()
 setCommentsToLocalStorage(commentsArray)
