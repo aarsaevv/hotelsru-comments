@@ -344,15 +344,15 @@ function hideValidationMessage() {
 
 let ul = document.querySelector('.comments__list')
 
-// /** Меняем массив через localStorage в целях реализации взаимодействия данных и localStorage */
-// if(localStorage.getItem('comments')) {
+/** Меняем массив через localStorage в целях реализации взаимодействия данных и localStorage */
+if(localStorage.getItem('comments')) {
 
-//     let parsedComments = deserialize(localStorage.getItem('comments'))
-//     commentsArray = parsedComments
-// }
-// else {
-//     commentsArray = []
-// }
+    let parsedComments = deserialize(localStorage.getItem('comments'))
+    commentsArray = parsedComments
+}
+else {
+    commentsArray = []
+}
 
 superHandler()
 setCommentsToLocalStorage(commentsArray)
